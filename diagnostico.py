@@ -61,6 +61,11 @@ def cpu_info() -> dict:
     elif sistema == "Darwin":
         v = _run(["sysctl", "-n", "hw.physicalcpu"]).strip()
         fisicos = int(v) if v.isdigit() else None
+    elif sistema == "Windows":
+        out = _run(["powershell", "-NoProfile", "-Command",
+                    "(Get-CimInstance Win32_Processor | Measure-Object -Property NumberOfCores -Sum).Sum"])
+        v = out.strip().splitlines()[0].strip() if out.strip() else ""
+        fisicos = int(v) if v.isdigit() else None
     return {"modelo": nome or "desconhecido", "nucleos_logicos": logicos,
             "nucleos_fisicos": fisicos, "arquitetura": platform.machine()}
 
