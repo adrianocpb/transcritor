@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Transcritor Local</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topo">
+  <div class="marca" id="ir-inicio" title="Voltar ao início">🎙️ Transcritor Local</div>
+  <div class="selo-privacidade" title="Servidor em 127.0.0.1, modelos executados no seu computador, sem chamadas externas">🔒 100% local — nada sai deste computador</div>
+</header>
+
+<main>
+  <!-- ============================================================ INÍCIO -->
+  <section id="tela-inicio" class="tela">
+    <div class="grade-2">
+      <div class="cartao">
+        <h2>Nova transcrição</h2>
+        <label class="campo">
+          <span>Vídeo da entrevista <small>(.mp4, .mkv, .mov, .avi)</small></span>
+          <input type="file" id="arq-video" accept=".mp4,.mkv,.mov,.avi,.webm,.m4v,.mp3,.wav,.m4a,.ogg,.flac,video/*,audio/*">
+        </label>
+        <label class="campo">
+          <span>Participantes <small>(.docx — opcional)</small></span>
+          <input type="file" id="arq-docx" accept=".docx">
+        </label>
+        <button id="btn-enviar" class="primario">Carregar arquivos</button>
+        <div id="envio-progresso" class="oculto">
+          <div class="barra"><div id="envio-barra"></div></div>
+          <small id="envio-texto"></small>
+        </div>
+        <p class="nota">Os arquivos são copiados para a pasta <code>dados/</code> deste projeto, no seu computador.</p>
+      </div>
+
+      <div class="cartao">
+        <h2>Este computador</h2>
+        <div id="info-sistema" class="info-sistema">Verificando hardware…</div>
+      </div>
+    </div>
+
+    <div class="cartao">
+      <h2>Transcrições anteriores</h2>
+      <div id="lista-projetos" class="lista-projetos"></div>
+    </div>
+  </section>
+
+  <!-- ============================================================ PARTICIPANTES -->
+  <section id="tela-participantes" class="tela oculto">
+    <div class="grade-2">
+      <div class="cartao">
+        <h2>1. Confirme os participantes</h2>
+        <div id="aviso-participantes" class="aviso oculto"></div>
+        <label class="campo"><span>Identificação da entrevista</span>
+          <input type="text" id="entrevista-id" placeholder="Ex.: ENT-TI-03">
+        </label>
+        <table class="tabela-participantes">
+          <thead><tr><th>Nome</th><th>Papel / área</th><th></th></tr></thead>
+          <tbody id="corpo-participantes"></tbody>
+        </table>
+        <button id="btn-add-participante" class="secundario">+ Adicionar participante</button>
+        <details id="docx-texto-box" class="oculto">
+          <summary>Ver texto lido do DOCX</summary>
+          <pre id="docx-texto"></pre>
+        </details>
+      </div>
+
+      <div class="cartao">
+        <h2>2. Configurações</h2>
+        <fieldset>
+          <legend>Modelo de transcrição (Whisper)</legend>
+          <div id="opcoes-modelo" class="opcoes-modelo"></div>
+          <small class="nota">Modelos maiores são mais precisos e mais lentos. ✓ = já baixado.</small>
+        </fieldset>
+        <label class="campo"><span>Idioma</span>
+          <div class="linha">
+            <select id="idioma">
+              <option value="pt" selected>Português (Brasil)</option>
+              <option value="auto">Automático</option>
+              <option value="en">Inglês</option>
+              <option value="es">Espanhol</option>
+              <option value="outro">Outro…</option>
+            </select>
+            <input type="text" id="idioma-outro" class="oculto curto" placeholder="código, ex.: fr">
+          </div>
+        </label>
+        <fieldset>
+          <legend>Diarização (quem fala quando)</legend>
+          <label class="check"><input type="checkbox" id="diarizar" checked> Identificar speakers</label>
+          <div id="diar-status" class="nota"></div>
+          <div class="linha" id="caixa-num-speakers">
+            <label class="campo"><span>Número de speakers</span>
+              <select id="modo-speakers">
+                <option value="auto">Detectar automaticamente</option>
+                <option value="participantes" selected>Igual ao nº de participantes</option>
+                <option value="exato">Informar número exato</option>
+                <option value="faixa">Informar mínimo/máximo</option>
+              </select>
+            </label>
+            <label class="campo oculto" id="caixa-exato"><span>Exato</span><input type="number" id="num-exato" min="1" max="20" value="2" class="curto"></label>
+            <label class="campo oculto" id="caixa-min"><span>Mín.</span><input type="number" id="num-min" min="1" max="20" value="2" class="curto"></label>
+            <label class="campo oculto" id="caixa-max"><span>Máx.</span><input type="number" id="num-max" min="1" max="20" value="4" class="curto"></label>
+          </div>
+        </fieldset>
+        <details>
+          <summary>Avançado</summary>
+          <label class="campo"><span>Dispositivo da transcrição</span>
+            <select id="disp-trans"><option value="cpu">CPU</option><option value="cuda">GPU NVIDIA (CUDA)</option></select>
+          </label>
+          <label class="campo"><span>Dispositivo da diarização</span>
+            <select id="disp-diar"><option value="cpu">CPU</option><option value="cuda">GPU NVIDIA (CUDA)</option><option value="mps">Apple Silicon (MPS)</option></select>
+          </label>
+          <label class="check"><input type="checkbox" id="usar-nomes" checked> Informar nomes dos participantes ao modelo (melhora a grafia)</label>
+        </details>
+        <button id="btn-processar" class="primario">Confirmar e processar</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ PROCESSAMENTO -->
+  <section id="tela-processamento" class="tela oculto">
+    <div class="cartao centro">
+      <h2>Processando</h2>
+      <p id="proc-arquivo" class="nota"></p>
+      <div class="barra grande"><div id="proc-barra"></div></div>
+      <p id="proc-msg">Aguardando…</p>
+      <p class="nota">Tempo decorrido: <span id="proc-tempo">0:00</span> — você pode deixar esta janela aberta; o processamento continua no servidor local.</p>
+      <div id="proc-erro" class="erro oculto"></div>
+      <button id="btn-voltar-config" class="secundario oculto">Voltar às configurações</button>
+    </div>
+  </section>
+
+  <!-- ============================================================ SPEAKERS + REVISÃO (compartilham o player) -->
+  <section id="tela-trabalho" class="tela oculto">
+    <div class="trabalho">
+      <aside class="painel-player">
+        <div class="cartao player-cartao">
+          <video id="player" controls preload="metadata"></video>
+          <div class="controles">
+            <button id="btn-play" class="secundario" title="Ctrl+Espaço">▶︎ Play</button>
+            <span id="tempo-atual" class="mono">00:00:00</span>
+            <div class="velocidades">
+              <button data-vel="0.5">0.5x</button><button data-vel="1" class="ativo">1x</button><button data-vel="1.5">1.5x</button><button data-vel="2">2x</button>
+            </div>
+          </div>
+          <div class="controles">
+            <button id="btn-voltar5" class="secundario" title="Alt+←">⟲ 5s</button>
+            <button id="btn-avancar5" class="secundario" title="Alt+→">5s ⟳</button>
+            <label class="check pequeno"><input type="checkbox" id="seguir" checked> Acompanhar reprodução</label>
+          </div>
+          <p class="nota">Clique em um horário <span class="mono">[00:00:00]</span> para ir àquele ponto. Atalhos: <b>Ctrl+Espaço</b> play/pausa, <b>Alt+←/→</b> ±5 s.</p>
+        </div>
+      </aside>
+
+      <div class="painel-conteudo">
+        <!-- Associação de speakers -->
+        <div id="tela-speakers" class="oculto">
+          <div class="cartao">
+            <h2>Associe os speakers aos participantes</h2>
+            <p id="speakers-resumo"></p>
+            <p class="nota">Ouça os trechos de exemplo (▶) e escolha quem é cada voz. A identidade nunca é presumida automaticamente.</p>
+            <div id="lista-speakers"></div>
+            <div class="linha fim">
+              <button id="btn-aplicar-speakers" class="primario">Aplicar e revisar</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Revisão -->
+        <div id="tela-revisao" class="oculto">
+          <div class="cartao barra-ferramentas">
+            <div class="linha">
+              <strong id="rev-titulo"></strong>
+              <span id="status-salvo" class="nota"></span>
+            </div>
+            <div class="linha quebra">
+              <div class="alternador">
+                <button data-visao="blocos" class="ativo">Blocos</button><button data-visao="tabela">Tabela</button>
+              </div>
+              <input type="search" id="busca" placeholder="Buscar no texto…">
+              <select id="filtro-pessoa"><option value="">Todas as pessoas</option></select>
+              <button id="btn-remapear" class="secundario">Reassociar speakers</button>
+              <span class="separador"></span>
+              <span class="nota">Exportar:</span>
+              <a class="botao primario" data-exp="docx">DOCX</a>
+              <a class="botao secundario" data-exp="xlsx">XLSX</a>
+              <a class="botao secundario" data-exp="txt">TXT</a>
+              <a class="botao secundario" data-exp="json">JSON</a>
+              <a class="botao secundario" data-exp="srt">SRT</a>
+            </div>
+          </div>
+          <div id="blocos" class="blocos"></div>
+          <div id="tabela-box" class="cartao oculto">
+            <table class="tabela-transcricao">
+              <thead><tr><th>Início</th><th>Fim</th><th>Pessoa</th><th>Texto</th></tr></thead>
+              <tbody id="corpo-tabela"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<template id="tpl-bloco">
+  <div class="bloco">
+    <div class="bloco-cabeca">
+      <button class="tempo mono" title="Ir para este ponto do vídeo"></button>
+      <select class="pessoa"></select>
+      <span class="espaco"></span>
+      <span class="intervalo">
+        <input class="t-inicio mono" title="Início (hh:mm:ss.d)"> → <input class="t-fim mono" title="Fim (hh:mm:ss.d)">
+      </span>
+      <button class="acao dividir" title="Dividir no cursor do texto">✂︎</button>
+      <button class="acao juntar" title="Juntar com o próximo trecho">⤓</button>
+      <button class="acao excluir" title="Excluir trecho">🗑</button>
+    </div>
+    <textarea class="texto" rows="1" spellcheck="true"></textarea>
+  </div>
+</template>
+
+<script src="app.js"></script>
+</body>
+</html>

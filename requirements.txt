@@ -1,0 +1,18 @@
+# Servidor e interface
+fastapi>=0.115
+uvicorn>=0.30
+python-multipart>=0.0.9
+
+# Transcrição local (CTranslate2; CPU int8 ou GPU NVIDIA/CUDA)
+faster-whisper>=1.1
+
+# Diarização local (pyannote; CPU, CUDA ou Apple MPS)
+pyannote.audio>=3.3
+
+# Documentos
+python-docx>=1.1
+openpyxl>=3.1
+numpy
+
+# FFmpeg empacotado — usado só se o FFmpeg não estiver no PATH
+imageio-ffmpeg>=0.5

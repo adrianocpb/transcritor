@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+# Dados das entrevistas e modelos ficam SÓ no computador local
+dados/
+modelos/
